@@ -19,6 +19,23 @@ $(function() {
     });
 });
 
+function getStrLen(str) {
+    var count = 0;
+    for (var i= 0; i< str.length; i++)
+    {
+        var c = str.charCodeAt(i);
+        if ((c >= 0x0001 && c <= 0x007e) || (0xff60 <= c && c <= 0xff9f))
+        {
+            count++;
+        }
+        else
+        {
+            count+=2;
+        }
+    }
+    return count;
+}
+
 function createTable() {
     // set up the style
     var cTL, cTM, cTR;
@@ -78,12 +95,11 @@ function createTable() {
                     isNumberCol[j] = false;
                 }
             }
-            if (isNewCol || colLengths[j] < data.length) {
-               colLengths[j] = data.length;
+            if (isNewCol || colLengths[j] < getStrLen(data)) {
+               colLengths[j] = getStrLen(data);
             }
         }
     }
-    
     if (spreadSheetStyle) {    
         // now that we have the number of columns, add the letters
         var colCount = colLengths.length;
@@ -451,11 +467,24 @@ function defValue(value, defaultValue) {
     return (typeof value === "undefined") ? defaultValue : value;
 }
 
+function getChineseSpaceOffset(count){
+    if(count > 2){
+        if(count % 4 == 3) {
+            return parseInt(count /4 + 1);
+        } else{
+            return parseInt(count /4);
+        }
+    } else {
+        return 0;
+    }
+}
+
 function _pad(text, length, char, align) {
     // align: r l or c
     char = defValue(char, " ");
     align = defValue(align, "l");
-    var additionalChars = length - text.length;
+    var countChineseWords = getStrLen(text) - text.length;
+    var additionalChars = countChineseWords > 0 ? length - getStrLen(text) + getChineseSpaceOffset(countChineseWords) : length - text.length;
     var result = "";
     switch (align) {
         case "r":
